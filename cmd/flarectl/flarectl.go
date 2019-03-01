@@ -15,13 +15,15 @@ import (
 
 var api *cloudflare.API
 
+// tg
+var boolLambda *bool
+
 // writeTable outputs tabular data to stdout.
 func writeTable(data [][]string, cols ...string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(cols)
 	table.SetBorder(false)
 	table.AppendBulk(data)
-
 	table.Render()
 }
 
@@ -632,6 +634,221 @@ func main() {
 								cli.StringFlag{
 									Name:  "organization",
 									Usage: "organization name",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name:    "rate-limit",
+			Aliases: []string{"l"},
+			Usage:   "Rate limiting",
+			Subcommands: []cli.Command{
+				{
+					Name:    "rules",
+					Aliases: []string{"r"},
+					Usage:   "Rate limiting rules",
+					Subcommands: []cli.Command{
+						{
+							Name:    "list",
+							Aliases: []string{"l"},
+							Action:  ratelimitRules,
+							Usage:   "List rate limiting rules",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "zone",
+									Usage: "zone name",
+								},
+							},
+						},
+						{
+							Name:    "delete",
+							Usage:   "Delete rule",
+							Aliases: []string{"x"},
+							Action:  ratelimitRuleDelete,
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "zone",
+									Usage: "zone name",
+								},
+								cli.StringFlag{
+									Name:  "id",
+									Usage: "rule id",
+								},
+								cli.BoolFlag{
+									Name:  "force",
+									Usage: "Force deletion",
+								},
+							},
+						},
+						{
+							Name:    "describe",
+							Aliases: []string{"d"},
+							Action: func(c *cli.Context) error {
+								if err := checkEnv(); err != nil {
+									return err
+								}
+
+								if err := checkFlags(c, "id", "zone"); err != nil {
+									return err
+								}
+
+								ratelimitRuleDescribe(c)
+
+								return nil
+							},
+							Usage: "Get rule's details",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "zone",
+									Usage: "zone name",
+								},
+								cli.StringFlag{
+									Name:  "id",
+									Usage: "rule id",
+								},
+								cli.BoolFlag{
+									Name:  "json-output",
+									Usage: "Output rule's details as JSON",
+								},
+							},
+						},
+						{
+							Name:    "create",
+							Aliases: []string{"c"},
+							Usage:   "Create a rate limiting rule",
+							Action: func(c *cli.Context) error {
+								if err := checkEnv(); err != nil {
+									fmt.Println(err)
+									return err
+								}
+
+								if err := checkFlags(c, "description"); err != nil {
+									return err
+								}
+
+								ratelimitRuleCreate(c)
+
+								return nil
+							},
+							Flags: []cli.Flag{
+								cli.BoolFlag{
+									Name:  "disabled",
+									Usage: "Set true to disable rule at creation",
+								},
+								cli.StringFlag{
+									Name:  "zone",
+									Usage: "zone name",
+								},
+								cli.StringFlag{
+									Name:  "url",
+									Usage: "URL",
+								},
+								cli.StringSliceFlag{
+									Name:  "methods",
+									Usage: "HTTP Methods list",
+								},
+								cli.StringSliceFlag{
+									Name:  "schemes",
+									Usage: "Scheme (HTTP, HTTPS). All by default",
+								},
+								cli.IntSliceFlag{
+									Name:  "status",
+									Usage: "HTTP status code matched",
+								},
+								cli.BoolTFlag{
+									Name:        "origin-traffic",
+									Usage:       "TODO",
+									Destination: boolLambda,
+								},
+								cli.IntFlag{
+									Name: "period",
+								},
+								cli.IntFlag{
+									Name: "threshold",
+								},
+								cli.StringFlag{
+									Name: "action",
+								},
+								cli.IntFlag{
+									Name: "timeout",
+								},
+								cli.StringFlag{
+									Name: "description",
+								},
+								cli.BoolFlag{
+									Name:  "stdin",
+									Usage: "Input JSON (with pipe or prompt)",
+								},
+							},
+						},
+						{
+							Name:    "update",
+							Aliases: []string{"u"},
+							Usage:   "Update a rate limiting rule",
+							Action: func(c *cli.Context) error {
+								if err := checkFlags(c, "id", "zone"); err != nil {
+									return err
+								}
+
+								if err := checkEnv(); err != nil {
+									return err
+								}
+
+								ratelimitRuleUpdate(c)
+
+								return nil
+							},
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "id",
+									Usage: "rule id",
+								},
+								cli.StringFlag{
+									Name:  "zone",
+									Usage: "zone name",
+								},
+								cli.StringFlag{
+									Name:  "url",
+									Usage: "URL",
+								},
+								cli.StringSliceFlag{
+									Name:  "methods",
+									Usage: "HTTP Methods list",
+								},
+								cli.StringSliceFlag{
+									Name:  "schemes",
+									Usage: "Scheme (HTTP, HTTPS). All by default",
+								},
+								cli.IntSliceFlag{
+									Name:  "status",
+									Usage: "HTTP status code matched",
+								},
+								cli.BoolTFlag{
+									Name:        "origin-traffic",
+									Usage:       "TODO",
+									Destination: boolLambda,
+								},
+								cli.IntFlag{
+									Name: "period",
+								},
+								cli.IntFlag{
+									Name: "threshold",
+								},
+								cli.StringFlag{
+									Name: "action",
+								},
+								cli.IntFlag{
+									Name: "timeout",
+								},
+								cli.StringFlag{
+									Name: "description",
+								},
+								cli.BoolFlag{
+									Name:  "stdin",
+									Usage: "Input JSON (with pipe or prompt)",
 								},
 							},
 						},

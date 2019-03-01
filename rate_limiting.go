@@ -2,10 +2,10 @@ package cloudflare
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
 	"net/url"
 	"strconv"
-
-	"github.com/pkg/errors"
 )
 
 // RateLimit is a policy than can be applied to limit traffic within a customer domain
@@ -36,8 +36,17 @@ type RateLimitRequestMatcher struct {
 
 // RateLimitResponseMatcher contains the matching rules pertaining to responses
 type RateLimitResponseMatcher struct {
-	Statuses      []int `json:"status,omitempty"`
-	OriginTraffic *bool `json:"origin_traffic,omitempty"` // api defaults to true so we need an explicit empty value
+	Statuses      []int                            `json:"status,omitempty"`
+	OriginTraffic *bool                            `json:"origin_traffic,omitempty"` // api defaults to true so we need an explicit empty value
+	Headers       []RateLimitResponseMatcherHeader `json:"headers,omitempty"`
+}
+
+// RateLimitResponseMatcherHeader contains the structure of the origin
+// HTTP headers used in request matcher checks.
+type RateLimitResponseMatcherHeader struct {
+	Name  string `json:"name"`
+	Op    string `json:"op"`
+	Value string `json:"value"`
 }
 
 // RateLimitKeyValue is k-v formatted as expected in the rate limit description
@@ -186,16 +195,23 @@ func (api *API) UpdateRateLimit(zoneID, limitID string, limit RateLimit) (RateLi
 // DeleteRateLimit deletes a Rate Limit for a zone.
 //
 // API reference: https://api.cloudflare.com/#rate-limits-for-a-zone-delete-rate-limit
-func (api *API) DeleteRateLimit(zoneID, limitID string) error {
+func (api *API) DeleteRateLimit(zoneID, limitID string) (RateLimit, error) {
 	uri := "/zones/" + zoneID + "/rate_limits/" + limitID
 	res, err := api.makeRequest("DELETE", uri, nil)
+	fmt.Println("RES")
+
 	if err != nil {
-		return errors.Wrap(err, errMakeRequestError)
+		fmt.Println(res)
+		return RateLimit{}, errors.Wrap(err, errMakeRequestError)
 	}
+	fmt.Println(res)
 	var r rateLimitResponse
 	err = json.Unmarshal(res, &r)
 	if err != nil {
-		return errors.Wrap(err, errUnmarshalError)
+		return RateLimit{}, errors.Wrap(err, errUnmarshalError)
 	}
-	return nil
+	fmt.Println("test 1")
+	fmt.Println(r)
+
+	return r.Result, nil
 }
